@@ -1,4 +1,4 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import {createAction, createAsyncThunk} from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 
 import {loginApi, registerApi, verifyOtpApi} from '../../api/authApi';  // Make sure to import the register API function
@@ -57,7 +57,6 @@ export const registerThunk = createAsyncThunk<UserRegister, RegisterCredentials>
         }
     }
 );
-
 export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
     'auth/verifyOtp',
     async (otpData, { rejectWithValue }) => {

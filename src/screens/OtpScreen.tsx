@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyOtpThunk } from '../redux/slices/authThunks';
@@ -10,7 +10,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 const OtpScreen: React.FC = () => {
     const [otp, setOtp] = useState('');
     const dispatch = useDispatch<AppDispatch>();
-    const { loading, error } = useSelector((state: RootState) => state.auth);
+    const { loading, error, success } = useSelector((state: RootState) => state.auth);
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
     // Handle OTP submission
@@ -24,20 +24,20 @@ const OtpScreen: React.FC = () => {
         dispatch(verifyOtpThunk(otpData));  // Dispatch OTP verification
     };
 
-    // Listen to the error state from Redux store
-    React.useEffect(() => {
+    // Handle success and errors after the dispatch
+    useEffect(() => {
         if (error) {
             Alert.alert('Error', error.toString() || 'Something went wrong');
         }
     }, [error]);
 
-    // Listen to the loading state and handle success
-    React.useEffect(() => {
-        if (!loading && !error) {
+    // If verification is successful and loading is false, navigate to the login page
+    useEffect(() => {
+        if (!loading && success) {
             Alert.alert('Success', 'OTP verified successfully');
-            navigation.navigate('Login'); // Navigate to the Login screen or wherever necessary
+            navigation.navigate('Login'); // Navigate to the Login screen
         }
-    }, [loading, error, navigation]);
+    }, [loading, success, navigation]);
 
     return (
         <View style={styles.container}>

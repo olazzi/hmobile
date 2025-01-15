@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { loginThunk, registerThunk, verifyOtpThunk } from './authThunks';
-import { LoginResponse, User } from '../types';
+import {  registerThunk, verifyOtpThunk } from './authThunks';
+import {LoginResponse, User, UserRegister} from '../types';
 
 interface AuthState {
     user: User | null;
@@ -23,51 +23,39 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         logout: (state) => {
+            state.user = null;
             state.accessToken = null;
+        },
+        resetSuccess: (state) => {
+            state.success = false; // Reset success flag
         },
     },
     extraReducers: (builder) => {
         builder
-            // Login
-            .addCase(loginThunk.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(loginThunk.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
-                state.loading = false;
-                state.accessToken = action.payload.accessToken;
-                state.user = action.payload.user;
-            })
-            .addCase(loginThunk.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            })
             // Register
             .addCase(registerThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
                 state.success = false; // Reset success on new registration attempt
             })
-            .addCase(registerThunk.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
+            .addCase(registerThunk.fulfilled, (state, action: PayloadAction<UserRegister>) => {
                 state.loading = false;
-                state.accessToken = action.payload.accessToken;
-                state.user = action.payload.user;
-                state.success = true; // Set success to true on successful registration
+                state.user = action.payload; // Store the user data
+                state.success = true; // Indicate success
+                // No need to store accessToken since we're not using it here
             })
             .addCase(registerThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.success = false; // Set success to false on failed registration
+                state.success = false;
             })
-            // OTP Verification
+            // OTP Verification (same as before)
             .addCase(verifyOtpThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(verifyOtpThunk.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
+            .addCase(verifyOtpThunk.fulfilled, (state) => {
                 state.loading = false;
-                state.accessToken = action.payload.accessToken;
-                state.user = action.payload.user;
             })
             .addCase(verifyOtpThunk.rejected, (state, action) => {
                 state.loading = false;
@@ -75,5 +63,6 @@ const authSlice = createSlice({
             });
     },
 });
-export const { logout } = authSlice.actions;
+
+export const { logout,resetSuccess } = authSlice.actions;
 export default authSlice.reducer;

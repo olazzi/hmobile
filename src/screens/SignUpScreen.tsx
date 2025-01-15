@@ -6,6 +6,7 @@ import { RootState, AppDispatch } from '../redux/store';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { resetSuccess } from '../redux/slices/authSlice';  // Import resetSuccess
 
 const SignUpScreen: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -37,10 +38,13 @@ const SignUpScreen: React.FC = () => {
     // Listen to the success state and navigate to OTP screen on successful registration
     React.useEffect(() => {
         if (!loading && !error && success) {
+            // Reset success state before navigating to OTP screen
+            dispatch(resetSuccess());
+
             Alert.alert('Success', 'Account created successfully');
             navigation.navigate('OtpScreen'); // Navigate to OTP screen
         }
-    }, [loading, error, success, navigation]);
+    }, [loading, error, success, navigation, dispatch]);
 
     return (
         <View style={styles.container}>
