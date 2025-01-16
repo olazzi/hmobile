@@ -29,7 +29,7 @@ const LoginScreen: React.FC = () => {
 
     const handleLogin = () => {
         if (!email || !password) {
-            Alert.alert('Validation Error', 'Please fill in all fields');
+            Alert.alert('Validation Error', 'Please fill i n all fields');
             return;
         }
 
