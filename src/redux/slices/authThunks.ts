@@ -58,7 +58,7 @@ export const registerThunk = createAsyncThunk<UserRegister, RegisterCredentials>
     }
 );
 export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
-    'auth/verifyOtp',
+    'user/verify-otp',
     async (otpData, { rejectWithValue }) => {
         try {
             const response = await verifyOtpApi(otpData);  // Call the API to verify the OTP

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {  registerThunk, verifyOtpThunk } from './authThunks';
+import {loginThunk, registerThunk, verifyOtpThunk} from './authThunks';
 import {LoginResponse, User, UserRegister} from '../types';
 
 interface AuthState {
@@ -25,6 +25,8 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.accessToken = null;
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
         },
         resetSuccess: (state) => {
             state.success = false; // Reset success flag
@@ -32,6 +34,23 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(loginThunk.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            // Fulfilled action expects a PayloadAction<LoginResponse>
+            .addCase(
+                loginThunk.fulfilled,
+                (state, action: PayloadAction<LoginResponse>) => {
+                    state.loading = false;
+                    state.user = action.payload.user;  // Ensure this matches the response structure
+                    state.accessToken = action.payload.accessToken;
+                }
+            )
+            .addCase(loginThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Login failed';
+            })
             // Register
             .addCase(registerThunk.pending, (state) => {
                 state.loading = true;
@@ -54,8 +73,9 @@ const authSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(verifyOtpThunk.fulfilled, (state) => {
+            .addCase(verifyOtpThunk.fulfilled, (state, action: PayloadAction<{ accessToken: string }>) => {
                 state.loading = false;
+                state.accessToken = action.payload.accessToken;
             })
             .addCase(verifyOtpThunk.rejected, (state, action) => {
                 state.loading = false;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyOtpThunk } from '../redux/slices/authThunks';
 import { RootState, AppDispatch } from '../redux/store';
@@ -15,35 +15,24 @@ const OtpScreen: React.FC = () => {
 
     // Handle OTP submission
     const handleOtpSubmit = () => {
-        if (!otp) {
-            Alert.alert('Validation Error', 'Please enter the OTP');
+        if (!otp.trim()) {
             return;
         }
-
-        const otpData = { otp };
-        dispatch(verifyOtpThunk(otpData));  // Dispatch OTP verification
+        dispatch(verifyOtpThunk({ otp })); // Dispatch OTP verification
     };
 
-    // Handle success and errors after the dispatch
+    // Navigate to the profile page upon successful OTP verification
     useEffect(() => {
-        if (error) {
-            Alert.alert('Error', error.toString() || 'Something went wrong');
+        if (success) {
+            navigation.navigate('Profile'); // Navigate to Profile screen
         }
-    }, [error]);
-
-    // If verification is successful and loading is false, navigate to the login page
-    useEffect(() => {
-        if (!loading && success) {
-            Alert.alert('Success', 'OTP verified successfully');
-            navigation.navigate('Login'); // Navigate to the Login screen
-        }
-    }, [loading, success, navigation]);
+    }, [success, navigation]);
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Enter OTP</Text>
             <TextInput
-                placeholder="OTP"
+                placeholder="Enter OTP"
                 value={otp}
                 onChangeText={setOtp}
                 style={styles.input}
@@ -54,7 +43,8 @@ const OtpScreen: React.FC = () => {
                 onPress={handleOtpSubmit}
                 disabled={loading}
             />
-            {loading && <Text>Loading...</Text>}
+            {loading && <Text style={styles.loading}>Verifying OTP...</Text>}
+            {error && <Text style={styles.error}>{error}</Text>}
         </View>
     );
 };
@@ -76,6 +66,14 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 10,
         paddingLeft: 10,
+    },
+    loading: {
+        color: 'blue',
+        marginTop: 10,
+    },
+    error: {
+        color: 'red',
+        marginTop: 10,
     },
 });
 
