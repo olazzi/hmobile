@@ -20,6 +20,8 @@ export interface UserRegister {
 export interface LoginResponse {
     accessToken: string;
     user: User;
+    isVerified: boolean;
+
 }
 export interface RegisterCredentials {
     username: string;

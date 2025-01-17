@@ -16,12 +16,12 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => (
-    <NavigationContainer>
+    <NavigationContainer >
         <Stack.Navigator initialRouteName="Login">
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
-            <Stack.Screen name="OtpScreen" component={OtpScreen}/>
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="OtpScreen" component={OtpScreen} options={{ headerShown: false }}/>
         </Stack.Navigator>
     </NavigationContainer>
 );

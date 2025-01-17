@@ -1,4 +1,4 @@
-import {createAction, createAsyncThunk} from '@reduxjs/toolkit';
+import { createAsyncThunk} from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 
 import {loginApi, registerApi, verifyOtpApi} from '../../api/authApi';  // Make sure to import the register API function
@@ -16,8 +16,20 @@ export const loginThunk = createAsyncThunk<LoginResponse, LoginCredentials>(
     'auth/login',
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await loginApi(credentials);
-            const token = response.accessToken;
+            const response = await loginApi(credentials); // API call for login
+            const { accessToken, isVerified } = response;
+
+            // Extract the actual token (assuming accessToken is an object with a `accessToken` field)
+            const token = accessToken?.accessToken;
+
+            console.log('Login ResponseisVerified:', isVerified);  // Log the login response
+
+            // Check if token exists
+            if (!token) {
+                return rejectWithValue({ message: 'Access token is missing.' });
+            }
+
+            // If verified, decode the token and return the user and token
             const decodedToken = jwtDecode<ExtendedJwtPayload>(token);
 
             const user: User = {
@@ -26,13 +38,20 @@ export const loginThunk = createAsyncThunk<LoginResponse, LoginCredentials>(
                 email: decodedToken.email || '',
             };
 
-            return { accessToken: token, user };
+            // Return the data as a LoginResponse type, including the verification status
+            return { accessToken: token, user, isVerified } as LoginResponse; // Explicitly include isVerified
         } catch (error: any) {
-            console.error('Login API Error:', error);
+            console.error('Login  thunnk error thunk Error:', error);
+
+            // Handle error by rejecting with the message
             return rejectWithValue(error.response ? error.response.data : error.message);
         }
     }
 );
+
+
+
+
 
 // Register Thunk
 export const registerThunk = createAsyncThunk<UserRegister, RegisterCredentials>(
@@ -62,20 +81,22 @@ export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
     async (otpData, { rejectWithValue }) => {
         try {
             const response = await verifyOtpApi(otpData);  // Call the API to verify the OTP
-            const token = response.accessToken; // Assume the token is returned if OTP is correct
+            const { accessToken: token } = response; // Destructure accessToken and assign it to 'token'
+
             const decodedToken = jwtDecode<ExtendedJwtPayload>(token);
 
             const user: User = {
                 id: decodedToken.sub || '',
                 name: decodedToken.username || '',
                 email: decodedToken.email || '',
-
             };
 
-            return { accessToken: token, user };
+            // Return the data as a LoginResponse type
+            return { accessToken: token, user } as LoginResponse;
         } catch (error: any) {
             console.error('OTP Verification API Error:', error);
             return rejectWithValue(error.response ? error.response.data : error.message);
         }
     }
 );
+

@@ -6,7 +6,7 @@ import { RootState } from '../redux/store';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfileScreen: React.FC = () => {
     const { user, accessToken } = useSelector((state: RootState) => state.auth);
