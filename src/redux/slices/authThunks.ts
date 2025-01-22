@@ -1,4 +1,4 @@
-import { createAsyncThunk} from '@reduxjs/toolkit';
+    import { createAsyncThunk} from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 
 import {loginApi, registerApi, verifyOtpApi} from '../../api/authApi';  // Make sure to import the register API function
@@ -22,7 +22,7 @@ export const loginThunk = createAsyncThunk<LoginResponse, LoginCredentials>(
             // Extract the actual token (assuming accessToken is an object with a `accessToken` field)
             const token = accessToken?.accessToken;
 
-            console.log('Login ResponseisVerified:', isVerified);  // Log the login response
+            console.log('Login ResponseisVerified:', accessToken);  // Log the login response
 
             // Check if token exists
             if (!token) {

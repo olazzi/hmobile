@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
+
 
 // Function to store a theme value ('dark' or 'light')
-export const storeData = async (key: string, value: "dark" | "light") => {
+export const storeData = async (key: string, value: 'dark' | 'light') => {
     try {
         await AsyncStorage.setItem(key, value);
     } catch (error: any) {
@@ -13,7 +13,9 @@ export const storeData = async (key: string, value: "dark" | "light") => {
 // Function to store tokens (e.g., JWT token)
 export const storeTokens = async (key: string, value: string) => {
     try {
-        await AsyncStorage.setItem(key, value);
+        // Ensure value is a string
+        const valueToStore = typeof value === 'string' ? value : JSON.stringify(value);
+        await AsyncStorage.setItem(key, valueToStore);
     } catch (error: any) {
         console.error("Error storing token:", error);
     }
@@ -34,32 +36,14 @@ export const getData = async (key: string) => {
     }
 };
 
-// Function to save a count with a specific name
-export const saveCountToLocalStorage = async (countToSave: number, name: string) => {
-    try {
-        await AsyncStorage.setItem(name, countToSave.toString());
-        Alert.alert(`Count saved as ${countToSave} with the name "${name}"`);
-    } catch (error) {
-        console.error('Error saving count to local storage:', error);
-    }
-};
 
-// Function to get all saved counts
-export const getSavedCounts = async () => {
-    try {
-        const keys = await AsyncStorage.getAllKeys();
-        const pairs = await AsyncStorage.multiGet(keys);
-        return pairs || [];
-    } catch (error) {
-        console.error('Error getting saved counts:', error);
-        return [];
-    }
-};
+
+
 
 // Function to get the stored token (JWT or any other token)
 export const getToken = async () => {
     try {
-        const token = await AsyncStorage.getItem('token');
+        const token = await AsyncStorage.getItem('accessToken');
         if (token) {
             return token;
         } else {

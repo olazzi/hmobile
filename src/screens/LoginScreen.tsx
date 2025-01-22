@@ -1,76 +1,52 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import {View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, ActivityIndicator} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginThunk } from '../redux/slices/authThunks';
 import { RootState, AppDispatch } from '../redux/store';
-import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { AuthStackParamList } from '../navigation/AuthNavigator';
 
+type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
-type LoginCredentials = {
-    email: string;
-    password: string;
+type Props = {
+    navigation: LoginScreenNavigationProp;
 };
 
-const LoginScreen: React.FC = () => {
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const dispatch = useDispatch<AppDispatch>();
     const { loading, error } = useSelector((state: RootState) => state.auth);
 
-    type NavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
-    const navigation = useNavigation<NavigationProp>();
-    const [isVerifiedLocal, setIsVerifiedLocal] = useState(false);
     const handleLogin = async () => {
-        // Create the login credentials object
-        const credentials: LoginCredentials = {
-            email,
-            password,
-        };
+        const credentials = { email, password };
 
         try {
-            // Dispatch the login thunk
             const action = await dispatch(loginThunk(credentials));
 
-            // Check if login was successful and if the user is verified
             if (loginThunk.fulfilled.match(action)) {
-                const { user, isVerified } = action.payload;
-console.log('us--------------------------------------------------er',user)
-                setIsVerifiedLocal(isVerified);
-                // If the user is verified, navigate to the main app screen
-                if (isVerified) {
-                    // Navigate to the main screen (e.g., HomeScreen or Dashboard)
-                    navigation.navigate('Profile'); // Adjust the screen name accordingly
-                }
 
-            }  else if(loginThunk.rejected.match(action) && !isVerifiedLocal){
-
-                Alert.alert('Verification Needed', 'Please verify your email before logging in.');
-                navigation.navigate('OtpScreen'); // Adjust screen name as needed
             } else {
-                // If the login action is rejected, show the error message
-                Alert.alert('Login Fasiled' || 'Something went wrong!');
+
             }
         } catch (err) {
             console.error('Login error:', err);
-            Alert.alert('Error', 'An error occurred during login. Please try again.');
+            Alert.alert('Error', 'An error occurred during login.');
         }
     };
 
-
-
-
-
-
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Login</Text>
+            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.subtitle}>Login to your account</Text>
+
             <TextInput
                 placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
                 style={styles.input}
+                keyboardType="email-address"
+                autoCapitalize="none"
             />
             <TextInput
                 placeholder="Password"
@@ -79,47 +55,84 @@ console.log('us--------------------------------------------------er',user)
                 secureTextEntry
                 style={styles.input}
             />
-            <Button
-                title="Login"
-                onPress={handleLogin}
-                disabled={loading}
-            />
-            {loading && <Text>Loading...</Text>}
+
+            {loading ? (
+                <ActivityIndicator size="large" color="#6200EE" style={styles.loadingIndicator} />
+            ) : (
+                <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                    <Text style={styles.buttonText}>Login</Text>
+                </TouchableOpacity>
+            )}
+
             {error && <Text style={styles.errorText}>{error}</Text>}
 
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+                <Text style={styles.signupText}>Don't have an account? <Text style={styles.signupLink}>Sign up</Text></Text>
             </TouchableOpacity>
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        backgroundColor: '#f9f9f9',
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        marginBottom: 20,
+        color: '#333',
+        marginBottom: 10,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 30,
     },
     input: {
-        height: 40,
-        borderColor: 'gray',
+        width: '100%',
+        height: 50,
+        borderColor: '#ddd',
         borderWidth: 1,
-        marginBottom: 10,
-        paddingLeft: 10,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        marginBottom: 15,
+        backgroundColor: '#fff',
+        fontSize: 16,
+    },
+    button: {
+        width: '100%',
+        height: 50,
+        backgroundColor: '#6200EE',
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    loadingIndicator: {
+        marginVertical: 10,
     },
     errorText: {
         color: 'red',
         marginTop: 10,
+        textAlign: 'center',
     },
     signupText: {
-        color: 'blue',
+        fontSize: 14,
+        color: '#666',
         marginTop: 20,
         textAlign: 'center',
+    },
+    signupLink: {
+        color: '#6200EE',
+        fontWeight: 'bold',
     },
 });
 

@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Alert,
+    ActivityIndicator,
+    StyleSheet,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerThunk } from '../redux/slices/authThunks';
 import { RootState, AppDispatch } from '../redux/store';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { resetSuccess } from '../redux/slices/authSlice';  // Import resetSuccess
+import { resetSuccess } from '../redux/slices/authSlice';
 
 const SignUpScreen: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -14,8 +22,11 @@ const SignUpScreen: React.FC = () => {
     const [username, setUsername] = useState('');
     const [bio, setBio] = useState('');
     const [profilePicture, setProfilePicture] = useState('');
+
     const dispatch = useDispatch<AppDispatch>();
-    const { loading, error, success } = useSelector((state: RootState) => state.auth);
+    const { loading, error, success, awaitingVerification } = useSelector(
+        (state: RootState) => state.auth
+    );
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
     const handleRegister = () => {
@@ -25,30 +36,27 @@ const SignUpScreen: React.FC = () => {
         }
 
         const userData = { email, password, username, bio, profilePicture };
-        dispatch(registerThunk(userData));  // Dispatch registration
+        dispatch(registerThunk(userData));
     };
 
-    // Listen to the error state from the Redux store
-    React.useEffect(() => {
+    useEffect(() => {
         if (error) {
             Alert.alert('Error', error.toString() || 'Something went wrong');
         }
     }, [error]);
 
-    // Listen to the success state and navigate to OTP screen on successful registration
-    React.useEffect(() => {
-        if (!loading && !error && success) {
-            // Reset success state before navigating to OTP screen
+    useEffect(() => {
+        if (success && awaitingVerification) {
             dispatch(resetSuccess());
-
-            Alert.alert('Success', 'Account created successfully');
-            navigation.navigate('OtpScreen'); // Navigate to OTP screen
+            Alert.alert('Success', 'Account created successfully. Please verify your email.');
+            navigation.navigate('OtpScreen');
         }
-    }, [loading, error, success, navigation, dispatch]);
+    }, [success, awaitingVerification, dispatch, navigation]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Register</Text>
+            <Text style={styles.title}>Create Your Account</Text>
+
             <TextInput
                 placeholder="Username"
                 value={username}
@@ -60,13 +68,15 @@ const SignUpScreen: React.FC = () => {
                 value={email}
                 onChangeText={setEmail}
                 style={styles.input}
+                keyboardType="email-address"
+                autoCapitalize="none"
             />
             <TextInput
                 placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
                 style={styles.input}
+                secureTextEntry
             />
             <TextInput
                 placeholder="Bio"
@@ -80,33 +90,71 @@ const SignUpScreen: React.FC = () => {
                 onChangeText={setProfilePicture}
                 style={styles.input}
             />
-            <Button
-                title="Register"
+
+            <TouchableOpacity
+                style={[styles.button, styles.registerButton]}
                 onPress={handleRegister}
                 disabled={loading}
-            />
-            {loading && <Text>Loading...</Text>}
+            >
+                {loading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={styles.buttonText}>Register</Text>
+                )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.button, styles.loginButton]}
+                onPress={() => navigation.navigate('Login')}
+            >
+                <Text style={styles.buttonText}>Back to Login</Text>
+            </TouchableOpacity>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#f9f9f9',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+        color: '#333',
     },
     input: {
-        height: 40,
-        borderColor: 'gray',
+        width: '100%',
+        height: 50,
+        borderColor: '#ddd',
         borderWidth: 1,
-        marginBottom: 10,
-        paddingLeft: 10,
+        borderRadius: 8,
+        marginBottom: 15,
+        paddingLeft: 15,
+        backgroundColor: '#fff',
+        fontSize: 16,
+    },
+    button: {
+        width: '100%',
+        paddingVertical: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    registerButton: {
+        backgroundColor: '#6200EE',
+    },
+    loginButton: {
+        backgroundColor: '#03DAC6',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

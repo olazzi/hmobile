@@ -1,17 +1,52 @@
 import axiosInstance from './axiosInstance';
+import {storeTokens} from '../config/asyncStorage.tsx';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// API for login
 export const loginApi = async (credentials: { email: string; password: string }) => {
     try {
         const response = await axiosInstance.post('/auth/login', credentials);
-        console.log('Login Response:', credentials);  // Log the login response
-        return response.data;  // This should return an object like { token, user }
+        console.log('Login Response:', response.data);  // Log the login response
+
+        // If login is successful, get the user details using the access token
+        if (response.data.success && response.data.accessToken) {
+            const token = response.data.accessToken.accessToken; // Get the token
+            console.log('Access Token:', token);
+
+            // Use the correct URL with userId instead of '/users/me'
+            const userId = response.data.user.id;  // Assuming the user ID is included in the login response
+            const userResponse = await axiosInstance.get(`/users/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log('User Response:', userResponse.data);  // Log the user data
+            const userData = userResponse.data;
+
+            // Check if user data exists
+            if (userData && userData.id) {
+                // Store the user and token in AsyncStorage
+                await AsyncStorage.setItem('userId', userData.id);
+                await storeTokens('accessToken', token); // Assuming storeTokens saves the token
+
+                return {
+                    accessToken: token,
+                    user: userData,
+                    isVerified: userData.isVerified,
+                };
+            } else {
+                console.error('User data is missing or malformed');
+                throw new Error('User data is missing');
+            }
+        } else {
+            throw new Error('Login failed');
+        }
     } catch (error) {
-        console.log('Login Response:', credentials);
         console.error('Login API Error:', error);
         throw error;
     }
 };
+
 
 // API for register
 export const registerApi = async (userData: { username: string; email: string; password: string }) => {

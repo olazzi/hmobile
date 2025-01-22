@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Alert,
+    ActivityIndicator,
+    StyleSheet,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyOtpThunk } from '../redux/slices/authThunks';
 import { RootState, AppDispatch } from '../redux/store';
@@ -13,24 +21,26 @@ const OtpScreen: React.FC = () => {
     const { loading, error, success } = useSelector((state: RootState) => state.auth);
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-    // Handle OTP submission
     const handleOtpSubmit = () => {
         if (!otp.trim()) {
+            Alert.alert('Validation Error', 'OTP cannot be empty');
             return;
         }
-        dispatch(verifyOtpThunk({ otp })); // Dispatch OTP verification
+        dispatch(verifyOtpThunk({ otp }));
     };
 
-    // Navigate to the profile page upon successful OTP verification
     useEffect(() => {
         if (success) {
-            navigation.navigate('Profile'); // Navigate to Profile screen
         }
     }, [success, navigation]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Enter OTP</Text>
+            <Text style={styles.title}>Enter Verification Code</Text>
+            <Text style={styles.subtitle}>
+                A 6-digit OTP has been sent to your email. Please enter it below.
+            </Text>
+
             <TextInput
                 placeholder="Enter OTP"
                 value={otp}
@@ -38,12 +48,19 @@ const OtpScreen: React.FC = () => {
                 style={styles.input}
                 keyboardType="number-pad"
             />
-            <Button
-                title="Verify OTP"
+
+            <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleOtpSubmit}
                 disabled={loading}
-            />
-            {loading && <Text style={styles.loading}>Verifying OTP...</Text>}
+            >
+                {loading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={styles.buttonText}>Verify OTP</Text>
+                )}
+            </TouchableOpacity>
+
             {error && <Text style={styles.error}>{error}</Text>}
         </View>
     );
@@ -51,29 +68,56 @@ const OtpScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#f5f5f5',
     },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#333',
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
         marginBottom: 20,
     },
     input: {
-        height: 40,
-        borderColor: 'gray',
+        width: '100%',
+        height: 50,
+        borderColor: '#ccc',
         borderWidth: 1,
-        marginBottom: 10,
-        paddingLeft: 10,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        marginBottom: 20,
+        backgroundColor: '#fff',
+        fontSize: 16,
     },
-    loading: {
-        color: 'blue',
-        marginTop: 10,
+    button: {
+        width: '100%',
+        height: 50,
+        borderRadius: 8,
+        backgroundColor: '#6200EE',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    buttonDisabled: {
+        backgroundColor: '#B0A8B9',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
     error: {
         color: 'red',
         marginTop: 10,
+        textAlign: 'center',
     },
 });
 

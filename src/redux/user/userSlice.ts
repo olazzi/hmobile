@@ -1,23 +1,42 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:3000', // Change to your local server's base URL
+    baseURL: 'http://localhost:3000', // Adjust to your backend's base URL
     timeout: 5000,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Optional: Add interceptors for token handling
+// Add interceptors for token handling
 axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token'); // Adjust storage logic (e.g., AsyncStorage for React Native)
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+    async (config) => {
+        try {
+            const token = await AsyncStorage.getItem('token'); // Get token from AsyncStorage
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`; // Attach token to headers
+            }
+        } catch (error) {
+            console.error('Error reading token from storage:', error);
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        return Promise.reject(error); // Handle request error
+    }
+);
+
+axiosInstance.interceptors.response.use(
+    (response) => response, // Pass successful responses through
+    (error) => {
+        // Optional: Handle token expiration or unauthorized errors
+        if (error.response?.status === 401) {
+            console.warn('Unauthorized! Redirecting to login...');
+            // Optionally, clear token or redirect user to login
+        }
+        return Promise.reject(error); // Handle response error
+    }
 );
 
 export default axiosInstance;

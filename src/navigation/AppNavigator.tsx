@@ -1,29 +1,30 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import LoginScreen from '../screens/LoginScreen';
+import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '../screens/ProfileScreen';
-import SignUpScreen from '../screens/SignUpScreen';
 import OtpScreen from '../screens/OtpScreen';
 
 export type RootStackParamList = {
-    Login: undefined;
+    MainTabs: undefined;
     Profile: undefined;
-    SignUp: undefined;
     OtpScreen: undefined;
+    Login: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const AppNavigator = () => (
-    <NavigationContainer >
-        <Stack.Navigator initialRouteName="Login">
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="OtpScreen" component={OtpScreen} options={{ headerShown: false }}/>
+const AppNavigator: React.FC = () => {
+    return (
+        <Stack.Navigator initialRouteName="MainTabs">
+            <Stack.Screen name="MainTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
+            <Stack.Screen
+                name="Profile"
+                options={{ headerShown: false }}
+            >
+                {(props) => <ProfileScreen />}
+            </Stack.Screen>
         </Stack.Navigator>
-    </NavigationContainer>
-);
+    );
+};
 
 export default AppNavigator;
