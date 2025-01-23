@@ -3,7 +3,10 @@ import { jwtDecode } from 'jwt-decode';
 
 import {loginApi, registerApi, verifyOtpApi} from '../../api/authApi';  // Make sure to import the register API function
 import {LoginCredentials, LoginResponse, User, RegisterCredentials, UserRegister} from '../types';
-import { JwtPayload as JWT } from 'jwt-decode'; // Importing base JwtPayload type
+import { JwtPayload as JWT } from 'jwt-decode';
+    import {AxiosError} from "axios";
+    import {removeItem} from "../../config/asyncStorage.tsx";
+    import {logout} from "./authSlice.ts"; // Importing base JwtPayload type
 
 interface ExtendedJwtPayload extends JWT {
     sub: string; // User ID (ensure it's a string)
@@ -11,71 +14,76 @@ interface ExtendedJwtPayload extends JWT {
     email: string; // Add any other fields your token might have
 }
 
-// Login Thunk (same as your existing login)
-export const loginThunk = createAsyncThunk<LoginResponse, LoginCredentials>(
-    'auth/login',
-    async (credentials, { rejectWithValue }) => {
-        try {
-            const response = await loginApi(credentials); // API call for login
-            const { accessToken, isVerified } = response;
+    export const loginThunk = createAsyncThunk<LoginResponse, LoginCredentials>(
+        'auth/login',
+        async (credentials, { rejectWithValue }) => {
+            try {
+                // Call the login API
+                const response = await loginApi(credentials);
+                const { accessToken, isVerified } = response;
 
-            // Extract the actual token (assuming accessToken is an object with a `accessToken` field)
-            const token = accessToken?.accessToken;
+                // Check if the token exists and extract it
+                const token = accessToken;
+                if (!token) {
+                    throw new Error('Access token is missing.');
+                }
 
-            console.log('Login ResponseisVerified:', accessToken);  // Log the login response
+                console.log('Login Response:', response);
 
-            // Check if token exists
-            if (!token) {
-                return rejectWithValue({ message: 'Access token is missing.' });
+                // Decode the token to get user details
+                const decodedToken = jwtDecode<ExtendedJwtPayload>(token);
+
+                const user: User = {
+                    id: decodedToken.sub || '',
+                    name: decodedToken.username || '',
+                    email: decodedToken.email || '',
+                };
+
+                // Return the data as a `LoginResponse` type
+                return { accessToken: token, user, isVerified };
+            } catch (error) {
+                console.error('Login Thunk Error:', error);
+
+                // Handle Axios-specific errors
+                if ((error as AxiosError).isAxiosError) {
+                    const axiosError = error as AxiosError;
+                    return rejectWithValue(
+                         axiosError.message || 'An error occurred.'
+                    );
+                }
+
+                // Handle generic errors
+                return rejectWithValue((error as Error).message || 'An unknown error occurred.');
             }
-
-            // If verified, decode the token and return the user and token
-            const decodedToken = jwtDecode<ExtendedJwtPayload>(token);
-
-            const user: User = {
-                id: decodedToken.sub || '',
-                name: decodedToken.username || '',
-                email: decodedToken.email || '',
-            };
-
-            // Return the data as a LoginResponse type, including the verification status
-            return { accessToken: token, user, isVerified } as LoginResponse; // Explicitly include isVerified
-        } catch (error: any) {
-            console.error('Login  thunnk error thunk Error:', error);
-
-            // Handle error by rejecting with the message
-            return rejectWithValue(error.response ? error.response.data : error.message);
         }
-    }
-);
-
-
+    );
 
 
 
 // Register Thunk
 export const registerThunk = createAsyncThunk<UserRegister, RegisterCredentials>(
-    'user/register',  // It's better to make the action type more specific
+    'user/register',
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await registerApi(credentials);  // Call the API to register the user
+            const response = await registerApi(credentials);
 
-            // Create the user object using the provided credentials and response data
+            // Create the user object
             const user: UserRegister = {
-                id: response.id || '',  // Assuming response contains user ID
+                id: response.id || '',
                 name: response.username || '',
                 email: response.email || '',
-                bio: credentials.bio, // Adding bio from the credentials
-                profilePicture: credentials.profilePicture, // Adding profilePicture from the credentials
+                bio: credentials.bio, // Pass bio
+                profilePicture: credentials.profilePicture, // Pass profile picture
             };
 
-            return user;  // Return the user object directly without the token
+            return user;
         } catch (error: any) {
             console.error('Register API Error:', error);
             return rejectWithValue(error.response ? error.response.data : error.message);
         }
     }
 );
+
 export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
     'user/verify-otp',
     async (otpData, { rejectWithValue }) => {
@@ -99,4 +107,14 @@ export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
         }
     }
 );
-
+    export const logoutThunk = createAsyncThunk('auth/logout', async (_, { dispatch }) => {
+        try {
+            await removeItem('user');
+            await removeItem('accessToken');
+            await removeItem('isVerified');
+            // Dispatch the logout action to clear Redux state
+            dispatch(logout());
+        } catch (error) {
+            console.error('Error clearing AsyncStorage:', error);
+        }
+    });

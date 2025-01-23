@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { loginThunk, registerThunk, verifyOtpThunk } from './authThunks';
 import { LoginResponse, User, UserRegister } from '../types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getItem, getToken, removeItem, setItem} from "../../config/asyncStorage.tsx";
 
 interface AuthState {
     user: User | null;
@@ -11,6 +11,7 @@ interface AuthState {
     success: boolean;
     awaitingVerification: boolean;
     isVerified:boolean;
+    isAuthenticated:boolean;
 }
 
 const initialState: AuthState = {
@@ -21,21 +22,31 @@ const initialState: AuthState = {
     success: false,
     awaitingVerification: false,
     isVerified: false,
+    isAuthenticated:false,
 };
 
 export const initializeAuthState = () => async (dispatch: any) => {
     try {
-        const user = await AsyncStorage.getItem('user');
-        const accessToken = await AsyncStorage.getItem('accessToken');
+        const token = await getToken();
+        const isVerified = await getItem('isVerified');
+        console.log('Retrieved isVerified from storage:', isVerified);
 
-        if (user && accessToken) {
-            dispatch(setUser(JSON.parse(user)));
-            dispatch(setAccessToken(accessToken));
+        if (token) {
+            dispatch(setAccessToken(token));
+            dispatch(setIsAuthenticated(true));
+
+            if (isVerified === 'true') {
+                dispatch(setIsVerified(true));
+            } else {
+                dispatch(setIsVerified(false));
+            }
         }
     } catch (error) {
         console.error('Error initializing auth state:', error);
     }
 };
+
+
 
 const authSlice = createSlice({
     name: 'auth',
@@ -48,17 +59,23 @@ const authSlice = createSlice({
             state.awaitingVerification = false;
             state.error = null;
             state.isVerified = false;
-            AsyncStorage.removeItem('user');
-            AsyncStorage.removeItem('accessToken');
+            state.isAuthenticated = false;
         },
         resetSuccess: (state) => {
             state.success = false;  // Reset success flag
         },
         setAccessToken: (state, action: PayloadAction<string>) => {
             state.accessToken = action.payload;
+            state.isAuthenticated = true;
         },
         setUser: (state, action: PayloadAction<User>) => {
             state.user = action.payload;
+        },
+        setIsAuthenticated: (state, action: PayloadAction<boolean>) => {
+            state.isAuthenticated = action.payload; // Update isAuthenticated status
+        },
+        setIsVerified: (state, action: PayloadAction<boolean>) => {
+            state.isVerified = action.payload; // Update isVerified status
         },
     },
     extraReducers: (builder) => {
@@ -73,13 +90,15 @@ const authSlice = createSlice({
                 loginThunk.fulfilled,
                 (state, action: PayloadAction<LoginResponse>) => {
                     const { user, accessToken, isVerified } = action.payload;
-console.log("123122222222222"+user)
                     state.loading = false;
                     state.user = user;
                     state.accessToken = accessToken;
                     state.success = true;
+                    state.isAuthenticated = true;
                     state.isVerified = isVerified;
                     state.awaitingVerification = !isVerified;
+
+                    setItem('isVerified', isVerified.toString());
                 }
             )
             .addCase(loginThunk.rejected, (state, action) => {
@@ -98,6 +117,7 @@ console.log("123122222222222"+user)
                 state.user = action.payload; // Store the user data
                 state.success = true; // Indicate success for registration
                 state.awaitingVerification = true; // Mark as awaiting verification
+
             })
             .addCase(registerThunk.rejected, (state, action) => {
                 state.loading = false;
@@ -122,6 +142,7 @@ console.log("123122222222222"+user)
                     state.awaitingVerification = false;
                     state.isVerified = true;
                     state.success = true;
+                    state.isAuthenticated = true;
                 }
             )
             .addCase(verifyOtpThunk.rejected, (state, action) => {
@@ -132,5 +153,5 @@ console.log("123122222222222"+user)
     },
 });
 
-export const { logout, resetSuccess, setUser, setAccessToken } = authSlice.actions;
+export const { logout, resetSuccess, setUser, setAccessToken, setIsAuthenticated,setIsVerified  } = authSlice.actions;
 export default authSlice.reducer;

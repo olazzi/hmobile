@@ -7,6 +7,7 @@ import {
     Alert,
     ActivityIndicator,
     StyleSheet,
+    Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerThunk } from '../redux/slices/authThunks';
@@ -15,6 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { resetSuccess } from '../redux/slices/authSlice';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 const SignUpScreen: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -28,7 +31,38 @@ const SignUpScreen: React.FC = () => {
         (state: RootState) => state.auth
     );
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const requestPermissions = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                const granted = await PermissionsAndroid.check(
+                    PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                );
 
+                if (!granted) {
+                    const result = await PermissionsAndroid.request(
+                        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+                        {
+                            title: 'Storage Permission Required',
+                            message: 'This app needs access to your storage to select pictures.',
+                            buttonPositive: 'OK',
+                             buttonNegative: 'Cancel',
+                        }
+                    );
+
+                    if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+                        Alert.alert('Permission Denied', 'Storage permission is required to select a picture.');
+                    }
+                }
+            } catch (err) {
+                console.warn(err);
+            }
+        }
+    };
+
+    // Request permissions on component mount
+    useEffect(() => {
+        requestPermissions();
+    }, []);
     const handleRegister = () => {
         if (!email || !password || !username || !bio || !profilePicture) {
             Alert.alert('Validation Error', 'Please fill in all fields');
@@ -52,6 +86,27 @@ const SignUpScreen: React.FC = () => {
             navigation.navigate('OtpScreen');
         }
     }, [success, awaitingVerification, dispatch, navigation]);
+ 
+
+    const handleSelectPicture = async () => {
+        try {
+            const result = await launchImageLibrary({
+                mediaType: 'photo',
+                quality: 1,
+            });
+    
+            if (result.assets && result.assets.length > 0) {
+                setProfilePicture(result.assets[0].uri || '');
+            } else if (result.didCancel) {
+                Alert.alert('Cancelled', 'Image selection was cancelled.');
+            } else {
+                Alert.alert('Error', 'Something went wrong during image selection.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to open image library.');
+        }
+    };
+    
 
     return (
         <View style={styles.container}>
@@ -84,12 +139,19 @@ const SignUpScreen: React.FC = () => {
                 onChangeText={setBio}
                 style={styles.input}
             />
-            <TextInput
-                placeholder="Profile Picture URL"
-                value={profilePicture}
-                onChangeText={setProfilePicture}
-                style={styles.input}
-            />
+           <TouchableOpacity
+    style={styles.imagePickerButton}
+    onPress={handleSelectPicture}
+>
+    <Text style={styles.imagePickerText}>
+        {profilePicture ? 'Change Picture' : 'Select Profile Picture'}
+    </Text>
+</TouchableOpacity>
+
+{profilePicture ? (
+    <Image source={{ uri: profilePicture }} style={styles.profileImage} />
+) : null}
+
 
             <TouchableOpacity
                 style={[styles.button, styles.registerButton]}
@@ -155,6 +217,24 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    imagePickerButton: {
+        marginBottom: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        backgroundColor: '#6200EE',
+        borderRadius: 8,
+    },
+    imagePickerText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 15,
     },
 });
 

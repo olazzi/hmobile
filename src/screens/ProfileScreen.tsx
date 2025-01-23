@@ -1,44 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../redux/slices/authSlice';
-import { fetchUserThunk } from '../redux/slices/userThunk'; // Import the thunk
-import { AppDispatch, RootState } from '../redux/store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getToken } from '../config/asyncStorage.tsx';
+import { getItem, getToken, removeItem } from '../config/asyncStorage.tsx'; // Assuming getToken retrieves the token
+import { fetchUserThunk } from '../redux/slices/userThunk'; // Import the thunk
+import { useDispatch } from 'react-redux'; // Use dispatch for the thunk
+import { AppDispatch } from '../redux/store'; // Import AppDispatch from your store
+import { logout } from '../redux/slices/authSlice.ts';
+import {logoutThunk} from "../redux/slices/authThunks.ts";
 
 const ProfileScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { user, loading, error } = useSelector((state: RootState) => state.user);
-    const [token, setToken] = useState<string | null>(null); // State to store the token for testing
+    const [user, setUser] = useState<any>(null); // Local state for user data
+    const [loading, setLoading] = useState<boolean>(true); // Local loading state
+    const [error, setError] = useState<string | null>(null); // Local error state
 
+    // Fetch user data when the component is mounted
     useEffect(() => {
         const fetchUserData = async () => {
-            const userId = await AsyncStorage.getItem('userId');
-            const savedToken = await getToken();
-            console.log("---------------------------------", userId);
-            console.log("--------------------------------2-", savedToken);
-            setToken(savedToken); // Set token to state for testing purposes
+            const savedToken = await getToken(); // Get the saved token
+            const userId = await getItem('userId'); // Get the user ID from storage
 
-            if (userId && savedToken) {
-                dispatch(fetchUserThunk({ userId, token: savedToken })); // Pass an object instead of two separate arguments
+            if (savedToken && userId) {
+                try {
+                    setLoading(true); // Set loading state to true while fetching
+                    const result = await dispatch<any>(fetchUserThunk({ userId })).unwrap(); // Dispatch thunk and unwrap the result
+                    setUser(result); // Store user data in local state
+                    setLoading(false); // Set loading to false once data is fetched
+                } catch (err: any) {
+                    setError(err.message || 'Something went wrong'); // Handle error
+                    setLoading(false); // Set loading to false on error
+                }
+            } else {
+                setError('User ID or token missing');
+                setLoading(false); // Set loading to false if no token or user ID
             }
         };
 
-        (async () => {
-            await fetchUserData();
-        })();
+        fetchUserData(); // Call the function to fetch user data
     }, [dispatch]);
 
+
     const handleLogout = async () => {
-        try {
-            await AsyncStorage.removeItem('token');
-            await AsyncStorage.removeItem('userId');
-            dispatch(logout());
-        } catch (error) {
-            console.error('Error clearing AsyncStorage:', error);
-        }
+        dispatch(logoutThunk());
     };
+
 
     return (
         <View style={styles.container}>
@@ -57,7 +62,6 @@ const ProfileScreen: React.FC = () => {
             ) : (
                 <Text>Please log in.</Text>
             )}
-            <Text style={styles.token}>Token: {token}</Text>
         </View>
     );
 };
@@ -77,11 +81,6 @@ const styles = StyleSheet.create({
     error: {
         color: 'red',
         marginTop: 10,
-    },
-    token: {
-        marginTop: 20,
-        fontSize: 14,
-        color: 'gray',
     },
 });
 
