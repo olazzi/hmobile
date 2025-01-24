@@ -62,7 +62,7 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
         },
         resetSuccess: (state) => {
-            state.success = false;  // Reset success flag
+            state.success = false;  
         },
         setAccessToken: (state, action: PayloadAction<string>) => {
             state.accessToken = action.payload;
@@ -72,15 +72,15 @@ const authSlice = createSlice({
             state.user = action.payload;
         },
         setIsAuthenticated: (state, action: PayloadAction<boolean>) => {
-            state.isAuthenticated = action.payload; // Update isAuthenticated status
+            state.isAuthenticated = action.payload; 
         },
         setIsVerified: (state, action: PayloadAction<boolean>) => {
-            state.isVerified = action.payload; // Update isVerified status
+            state.isVerified = action.payload; 
         },
     },
     extraReducers: (builder) => {
         builder
-            // Login Thunk
+           
             .addCase(loginThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -104,27 +104,27 @@ const authSlice = createSlice({
             .addCase(loginThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Login failed';
-                state.success = false;  // Reset success on error
+                state.success = false;  
             })
-            // Register Thunk
+          
             .addCase(registerThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
-                state.success = false; // Reset success on new registration attempt
+                state.success = false; 
             })
             .addCase(registerThunk.fulfilled, (state, action: PayloadAction<UserRegister>) => {
                 state.loading = false;
-                state.user = action.payload; // Store the user data
-                state.success = true; // Indicate success for registration
-                state.awaitingVerification = true; // Mark as awaiting verification
+                state.user = action.payload; 
+                state.success = true; 
+                state.awaitingVerification = true; 
 
             })
             .addCase(registerThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.success = false;  // Reset success on error
+                state.success = false; 
             })
-            // OTP Verification Thunk
+            
             .addCase(verifyOtpThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -148,7 +148,7 @@ const authSlice = createSlice({
             .addCase(verifyOtpThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.success = false;  // Reset success on OTP error
+                state.success = false;  
             });
     },
 });

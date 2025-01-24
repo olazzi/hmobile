@@ -1,4 +1,3 @@
-// Example definitions (adjust as needed based on your API)
 export interface LoginCredentials {
     email: string;
     password: string;

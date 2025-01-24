@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchUserThunk } from './userThunk'; // Import the async thunk
+import { fetchUserThunk } from './userThunk'; 
 
 interface UserState {
     user: any | null;
@@ -17,21 +17,21 @@ const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        // Optional: you could add manual actions if needed
+       
     },
     extraReducers: (builder) => {
         builder
             .addCase(fetchUserThunk.pending, (state) => {
-                state.loading = true; // Set loading to true when the request starts
-                state.error = null; // Clear previous errors
+                state.loading = true; 
+                state.error = null; 
             })
             .addCase(fetchUserThunk.fulfilled, (state, action: PayloadAction<any>) => {
-                state.loading = false; // Set loading to false once the request is successful
-                state.user = action.payload; // Store user data
+                state.loading = false; 
+                state.user = action.payload; 
             })
             .addCase(fetchUserThunk.rejected, (state, action) => {
-                state.loading = false; // Set loading to false when the request fails
-                state.error = action.payload as string; // Store the error message
+                state.loading = false; 
+                state.error = action.payload as string; 
             });
     },
 });

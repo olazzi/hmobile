@@ -1,9 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Function to store any generic value in AsyncStorage
 export const setItem = async (key: string, value: any) => {
     try {
-        // Ensure value is a string, otherwise serialize it
         const valueToStore = typeof value === 'string' ? value : JSON.stringify(value);
         await AsyncStorage.setItem(key, valueToStore);
     } catch (error: any) {
@@ -11,23 +9,21 @@ export const setItem = async (key: string, value: any) => {
     }
 };
 
-// Function to retrieve any generic value from AsyncStorage
 export const getItem = async (key: string) => {
     try {
         let value = await AsyncStorage.getItem(key);
         if (value) {
-            // Try parsing as JSON if the value is not a string
             try {
                 return JSON.parse(value);
             } catch (error) {
-                return value; // Return the string if parsing fails
+                return value;
             }
         } else {
             return null;
         }
     } catch (error: any) {
         console.error(`Error getting data for key "${key}":`, error);
-        return null;  // Return null if there's an error
+        return null;  
     }
 };
 
@@ -39,7 +35,7 @@ export const removeItem = async (key: string) => {
     }
 };
 
-// Function to store tokens (e.g., JWT token)
+
 export const storeTokens = async (key: string, value: string) => {
     try {
         await setItem(key, value);
@@ -48,7 +44,7 @@ export const storeTokens = async (key: string, value: string) => {
     }
 };
 
-// Function to get the stored token (JWT or any other token)
+
 export const getToken = async () => {
     try {
         return await getItem('accessToken');

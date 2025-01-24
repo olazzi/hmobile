@@ -5,8 +5,7 @@ import FormData from 'form-data';
 export const loginApi = async (credentials: { email: string; password: string }) => {
     try {
         const response = await axiosInstance.post('/auth/login', credentials);
-        console.log('Login Response:', response.data); // Log the login response
-
+        console.log('Login Response:', response.data);
         if (response.data.success) {
             const userId = response.data.user.id;
             const token = response.data.accessToken?.accessToken || null;
@@ -54,7 +53,7 @@ export const registerApi = async (userData: {
                 name: 'profile.jpg',
                 type: 'image/jpeg',
             };
-            formData.append('profilePicture', file as any); // Add profile picture to form data
+            formData.append('profilePicture', file as any);
         }
 
         const response = await axiosInstance.post('/users', formData, {
@@ -72,16 +71,16 @@ export const registerApi = async (userData: {
 };
 
 
-// API for OTP verification
+
 export const verifyOtpApi = async (otpData: { otp: string }) => {
     try {
-        const response = await axiosInstance.post('/users/verify-otp', otpData);  // Adjust the endpoint as per your backend
+        const response = await axiosInstance.post('/users/verify-otp', otpData); 
         console.log('Verify OTP Response:', response.data);
         await setItem('userId', response.data.userId);
-        await storeTokens('accessToken', response.data.accessToken);  // Log the OTP verification response
-        return response.data;  // Assuming the response contains accessToken and user information
+        await storeTokens('accessToken', response.data.accessToken); 
+        return response.data; 
     } catch (error) {
-        console.error('Verify OTP API Error:', error);  // Log error if it occurs
-        throw error;  // Optionally, you can re-throw the error to handle it elsewhere
+        console.error('Verify OTP API Error:', error); 
+        throw error;
     }
 };

@@ -14,9 +14,8 @@ export const getUserData = async (userId: string): Promise<UserData> => {
         const response = await axiosInstance.get(`/users/${userId}`);
         return response.data;
     } catch (error: any) {
-        // Provide more detailed error context
         const errorMessage = error.response?.data?.message || 'Failed to fetch user data';
         console.error('Error fetching user data:', errorMessage);
-        throw new Error(errorMessage);  // You could throw a custom error if needed
+        throw new Error(errorMessage);  
     }
 };

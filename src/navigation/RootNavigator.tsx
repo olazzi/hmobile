@@ -18,24 +18,20 @@ const RootNavigator: React.FC = () => {
         (state: RootState) => state.auth
     );
 
-    // Check if the user is authenticated when the app starts
     useEffect(() => {
         const initializeAuth = async () => {
             try {
                 const token = await getToken();
-                const isVerifiedStorage = await getItem('isVerified'); // Retrieve `isVerified` from async storage
-
-
-                // Update state and Redux based on the token and `isVerified`
+                const isVerifiedStorage = await getItem('isVerified'); 
                 if (token) {
                     dispatch(setAccessToken(token));
                 }
 
                 if (isVerifiedStorage) {
-                    setIsVerifiedFromStorage(isVerifiedStorage); // Updates local state// Update Redux state
+                    setIsVerifiedFromStorage(isVerifiedStorage); 
                 } else {
 
-                    setIsVerifiedFromStorage(false); // Default to `false` if not found
+                    setIsVerifiedFromStorage(false); 
                 }
             } catch (error) {
                 console.error('Error initializing auth state:', error);

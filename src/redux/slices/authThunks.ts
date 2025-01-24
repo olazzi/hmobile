@@ -67,13 +67,12 @@ export const registerThunk = createAsyncThunk<UserRegister, RegisterCredentials>
         try {
             const response = await registerApi(credentials);
 
-            // Create the user object
             const user: UserRegister = {
                 id: response.id || '',
                 name: response.username || '',
                 email: response.email || '',
-                bio: credentials.bio, // Pass bio
-                profilePicture: credentials.profilePicture, // Pass profile picture
+                bio: credentials.bio, 
+                profilePicture: credentials.profilePicture, 
             };
 
             return user;
@@ -88,8 +87,8 @@ export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
     'user/verify-otp',
     async (otpData, { rejectWithValue }) => {
         try {
-            const response = await verifyOtpApi(otpData);  // Call the API to verify the OTP
-            const { accessToken: token } = response; // Destructure accessToken and assign it to 'token'
+            const response = await verifyOtpApi(otpData);  
+            const { accessToken: token } = response; 
 
             const decodedToken = jwtDecode<ExtendedJwtPayload>(token);
 
@@ -99,7 +98,7 @@ export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
                 email: decodedToken.email || '',
             };
 
-            // Return the data as a LoginResponse type
+            
             return { accessToken: token, user } as LoginResponse;
         } catch (error: any) {
             console.error('OTP Verification API Error:', error);
@@ -112,7 +111,7 @@ export const verifyOtpThunk = createAsyncThunk<LoginResponse, { otp: string }>(
             await removeItem('user');
             await removeItem('accessToken');
             await removeItem('isVerified');
-            // Dispatch the logout action to clear Redux state
+            
             dispatch(logout());
         } catch (error) {
             console.error('Error clearing AsyncStorage:', error);
